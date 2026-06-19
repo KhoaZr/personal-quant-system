@@ -15,9 +15,9 @@ Yahoo Finance -> Fetch Layer -> Processing Layer -> Database Layer
 
 ```text
 ├── fetch/
-│   └── (Các file mã nguồn lấy dữ liệu từ API)
+│   └── yahoo_finance.py (Có hàm lấy dữ liệu cổ phiếu của mã symbol theo ngày)
 ├── process/
-│   └── (Các file mã nguồn làm sạch và xử lý dữ liệu)
+│   └── stock_processor.py (Chuẩn hóa dữ liệu)
 ├── database/
 │   └── (Các file mã nguồn kết nối và quản lý PostgreSQL)
 └── main.py
