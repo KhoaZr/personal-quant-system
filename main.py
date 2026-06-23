@@ -8,7 +8,7 @@ from src.process.stock_processor import(
 import pandas as pd
 def main():
     all_data = []
-    symbols = ["TCB.VN","FPT.VN"]
+    symbols = ["TCB.VN","FPT.VN","BVH.VN","BVH.VN","GAS.VN","HPG.VN","MSN.VN","MWG.VN","PLX.VN","POW.VN","SAB.VN","VCB.VN","VIC.VN","VJC.VN","VNM.VN"]
     for symbol in symbols:
         df = get_data_today(symbol)
         df_process = process_stock_data(df.copy(),symbol)
