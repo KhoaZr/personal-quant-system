@@ -19,6 +19,34 @@ def main():
     # final_data.to_csv(path_df_process,index = False)
     symbol = "FPT.VN"
     df = get_data(symbol)
-    df.to_csv(f"data/raw/{symbol}.csv")
+    # df.to_csv(f"data/raw/{symbol}.csv")
+
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+
+    khoa = pd.read_csv("./data/raw/FPT.VN.csv")
+
+    # Chuyển Date sang datetime
+    khoa["Date"] = pd.to_datetime(khoa["Date"])
+
+    # Chuyển Date thành số
+    khoa["date_num"] = khoa["Date"].map(pd.Timestamp.toordinal)
+
+    # Ma trận tương quan
+    corr = khoa[
+        ["date_num", "Open", "High", "Low", "Close", "Volume"]
+    ].corr()
+
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(
+    corr,
+    annot=True,
+    cmap="coolwarm",
+    fmt=".2f",
+    linewidths=0.5
+)
+
+    plt.title("Correlation Matrix - FPT.VN")
+    plt.show()
 if __name__ == "__main__":
     main()
