@@ -1,11 +1,20 @@
 import pandas as pd
-from src.database.db import engine
-df = pd.read_csv("data/raw/data_a_day.csv")
+from sqlalchemy import text
 
-df.to_sql(
-    name="stock_prices",
-    con=engine,
-    if_exists="append",
-    index=False
-    )
-print("Lưu dữ liệu thành công!")
+from src.database.db import engine
+
+
+# ==============================
+# 1. Cấu hình
+# ==============================
+
+INPUT_FILE = "data/clean/FPT.VN.cleaned.csv"
+
+
+# ==============================
+# 2. Đọc dữ liệu.
+# ==============================
+
+df = pd.read_csv(INPUT_FILE)
+
+print(f"Đã đọc {len(df)} dòng từ {INPUT_FILE}");
