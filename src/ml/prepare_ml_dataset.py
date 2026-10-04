@@ -131,7 +131,7 @@ def create_target(
 
     df["target"] = (
         df["future_close"] > df["close"]
-    ).
+    )
 
     # Dòng cuối của mỗi symbol không có ngày tiếp theo
     df.loc[
