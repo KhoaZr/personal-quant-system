@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 import pandas as pd
 import yfinance as yf
 
+from typing import cast 
 
 def get_data_today(symbol: str) -> pd.DataFrame:
     df = yf.download(
@@ -14,7 +15,7 @@ def get_data_today(symbol: str) -> pd.DataFrame:
     if isinstance(df.columns, pd.MultiIndex):
         df.columns = df.columns.get_level_values(0)
 
-    return df
+    return cast(pd.DataFrame, df)
 
 
 def get_data(symbol: str) -> pd.DataFrame:
@@ -30,4 +31,4 @@ def get_data(symbol: str) -> pd.DataFrame:
     if isinstance(df.columns, pd.MultiIndex):
         df.columns = df.columns.get_level_values(0)
 
-    return df
+    return cast(pd.DataFrame, df)
