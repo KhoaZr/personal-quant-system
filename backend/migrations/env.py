@@ -8,7 +8,6 @@ from alembic import context
 from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, pool
 
-
 # ==========================================
 # Load .env & Python Path
 # ==========================================
@@ -31,7 +30,6 @@ sys.path.insert(
 # ==========================================
 
 from app.models.stock import Base
-
 
 # ==========================================
 # Alembic Config
@@ -72,6 +70,7 @@ target_metadata = Base.metadata
 # Offline Migration
 # ==========================================
 
+
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
 
@@ -93,6 +92,7 @@ def run_migrations_offline() -> None:
 # ==========================================
 # Online Migration
 # ==========================================
+
 
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""

@@ -1,16 +1,14 @@
-# backend/app/models/stock.py
-from typing import Optional, List, Any
 from datetime import date, datetime
-from typing import List, Optional
+from typing import Any
 
 from sqlalchemy import (
+    JSON,
     BigInteger,
     Boolean,
     Date,
     DateTime,
     ForeignKey,
     Integer,
-    JSON,
     Numeric,
     String,
     Text,
@@ -25,12 +23,12 @@ class Base(DeclarativeBase):
 # ==========================================
 # 1. CORE MARKET DATA
 #    (Từ ERD database_Stock.png)
+
 # ==========================================
 
 
 class Exchange(Base):
     __tablename__ = "exchanges"
-
     exchange_id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
@@ -45,14 +43,13 @@ class Exchange(Base):
         String(100),
         nullable=False,
     )
-    country: Mapped[Optional[str]] = mapped_column(String(50))
-    timezone: Mapped[Optional[str]] = mapped_column(String(50))
+    country: Mapped[str | None] = mapped_column(String(50))
+    timezone: Mapped[str | None] = mapped_column(String(50))
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.utcnow,
     )
-
-    stocks: Mapped[List["Stock"]] = relationship(
+    stocks: Mapped[list["Stock"]] = relationship(
         "Stock",
         back_populates="exchange_rel",
     )
@@ -60,23 +57,22 @@ class Exchange(Base):
 
 class Stock(Base):
     __tablename__ = "stocks"
-
     symbol: Mapped[str] = mapped_column(
         String(20),
         primary_key=True,
         index=True,
     )
-    company_name: Mapped[Optional[str]] = mapped_column(
+    company_name: Mapped[str | None] = mapped_column(
         String(255),
     )
-    exchange_id: Mapped[Optional[int]] = mapped_column(
+    exchange_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("exchanges.exchange_id"),
     )
-    sector: Mapped[Optional[str]] = mapped_column(String(100))
-    industry: Mapped[Optional[str]] = mapped_column(String(100))
-    listing_date: Mapped[Optional[date]] = mapped_column(Date)
-    currency: Mapped[Optional[str]] = mapped_column(
+    sector: Mapped[str | None] = mapped_column(String(100))
+    industry: Mapped[str | None] = mapped_column(String(100))
+    listing_date: Mapped[date | None] = mapped_column(Date)
+    currency: Mapped[str | None] = mapped_column(
         String(10),
         default="VND",
     )
@@ -93,19 +89,16 @@ class Stock(Base):
         default=datetime.utcnow,
         onupdate=datetime.utcnow,
     )
-
-    exchange_rel: Mapped[Optional["Exchange"]] = relationship(
+    exchange_rel: Mapped["Exchange | None"] = relationship(
         "Exchange",
         back_populates="stocks",
     )
-
-    prices: Mapped[List["StockPrice"]] = relationship(
+    prices: Mapped[list["StockPrice"]] = relationship(
         "StockPrice",
         back_populates="stock",
         cascade="all, delete-orphan",
     )
-
-    indicators: Mapped[List["TechnicalIndicator"]] = relationship(
+    indicators: Mapped[list["TechnicalIndicator"]] = relationship(
         "TechnicalIndicator",
         back_populates="stock",
         cascade="all, delete-orphan",
@@ -114,7 +107,6 @@ class Stock(Base):
 
 class StockPrice(Base):
     __tablename__ = "stock_prices"
-
     symbol: Mapped[str] = mapped_column(
         String(20),
         ForeignKey("stocks.symbol", ondelete="CASCADE"),
@@ -140,7 +132,7 @@ class StockPrice(Base):
         Numeric(12, 2),
         nullable=False,
     )
-    adj_close: Mapped[Optional[float]] = mapped_column(
+    adj_close: Mapped[float | None] = mapped_column(
         Numeric(12, 2),
     )
     volume: Mapped[int] = mapped_column(
@@ -151,7 +143,6 @@ class StockPrice(Base):
         DateTime,
         default=datetime.utcnow,
     )
-
     stock: Mapped["Stock"] = relationship(
         "Stock",
         back_populates="prices",
@@ -160,7 +151,6 @@ class StockPrice(Base):
 
 class TechnicalIndicator(Base):
     __tablename__ = "technical_indicators"
-
     symbol: Mapped[str] = mapped_column(
         String(20),
         ForeignKey("stocks.symbol", ondelete="CASCADE"),
@@ -170,51 +160,47 @@ class TechnicalIndicator(Base):
         Date,
         primary_key=True,
     )
-
-    sma20: Mapped[Optional[float]] = mapped_column(
+    sma20: Mapped[float | None] = mapped_column(
         Numeric(12, 4),
     )
-    sma50: Mapped[Optional[float]] = mapped_column(
+    sma50: Mapped[float | None] = mapped_column(
         Numeric(12, 4),
     )
-    ema20: Mapped[Optional[float]] = mapped_column(
+    ema20: Mapped[float | None] = mapped_column(
         Numeric(12, 4),
     )
-    ema50: Mapped[Optional[float]] = mapped_column(
+    ema50: Mapped[float | None] = mapped_column(
         Numeric(12, 4),
     )
-    rsi14: Mapped[Optional[float]] = mapped_column(
+    rsi14: Mapped[float | None] = mapped_column(
         Numeric(8, 4),
     )
-    macd: Mapped[Optional[float]] = mapped_column(
+    macd: Mapped[float | None] = mapped_column(
         Numeric(12, 4),
     )
-    macd_signal: Mapped[Optional[float]] = mapped_column(
+    macd_signal: Mapped[float | None] = mapped_column(
         Numeric(12, 4),
     )
-    macd_hist: Mapped[Optional[float]] = mapped_column(
+    macd_hist: Mapped[float | None] = mapped_column(
         Numeric(12, 4),
     )
-    atr14: Mapped[Optional[float]] = mapped_column(
+    atr14: Mapped[float | None] = mapped_column(
         Numeric(12, 4),
     )
-    obv: Mapped[Optional[int]] = mapped_column(BigInteger)
-
-    bollinger_upper: Mapped[Optional[float]] = mapped_column(
+    obv: Mapped[int | None] = mapped_column(BigInteger)
+    bollinger_upper: Mapped[float | None] = mapped_column(
         Numeric(12, 4),
     )
-    bollinger_middle: Mapped[Optional[float]] = mapped_column(
+    bollinger_middle: Mapped[float | None] = mapped_column(
         Numeric(12, 4),
     )
-    bollinger_lower: Mapped[Optional[float]] = mapped_column(
+    bollinger_lower: Mapped[float | None] = mapped_column(
         Numeric(12, 4),
     )
-
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.utcnow,
     )
-
     stock: Mapped["Stock"] = relationship(
         "Stock",
         back_populates="indicators",
@@ -224,12 +210,12 @@ class TechnicalIndicator(Base):
 # ==========================================
 # 2. FUNDAMENTAL, NEWS & MACRO
 #    (Từ ERD database_Stock.png)
+
 # ==========================================
 
 
 class CompanyFinancial(Base):
     __tablename__ = "company_financials"
-
     financial_id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
@@ -243,41 +229,38 @@ class CompanyFinancial(Base):
         Date,
         nullable=False,
     )
-    fiscal_year: Mapped[Optional[int]] = mapped_column(Integer)
-    fiscal_quarter: Mapped[Optional[int]] = mapped_column(Integer)
-
-    eps: Mapped[Optional[float]] = mapped_column(
+    fiscal_year: Mapped[int | None] = mapped_column(Integer)
+    fiscal_quarter: Mapped[int | None] = mapped_column(Integer)
+    eps: Mapped[float | None] = mapped_column(
         Numeric(12, 4),
     )
-    pe: Mapped[Optional[float]] = mapped_column(
+    pe: Mapped[float | None] = mapped_column(
         Numeric(12, 4),
     )
-    pb: Mapped[Optional[float]] = mapped_column(
+    pb: Mapped[float | None] = mapped_column(
         Numeric(12, 4),
     )
-    roe: Mapped[Optional[float]] = mapped_column(
+    roe: Mapped[float | None] = mapped_column(
         Numeric(12, 4),
     )
-    roa: Mapped[Optional[float]] = mapped_column(
+    roa: Mapped[float | None] = mapped_column(
         Numeric(12, 4),
     )
-    debt_to_equity: Mapped[Optional[float]] = mapped_column(
+    debt_to_equity: Mapped[float | None] = mapped_column(
         Numeric(12, 4),
     )
-
-    revenue: Mapped[Optional[float]] = mapped_column(
+    revenue: Mapped[float | None] = mapped_column(
         Numeric(18, 2),
     )
-    net_income: Mapped[Optional[float]] = mapped_column(
+    net_income: Mapped[float | None] = mapped_column(
         Numeric(18, 2),
     )
-    gross_margin: Mapped[Optional[float]] = mapped_column(
+    gross_margin: Mapped[float | None] = mapped_column(
         Numeric(12, 4),
     )
-    operating_margin: Mapped[Optional[float]] = mapped_column(
+    operating_margin: Mapped[float | None] = mapped_column(
         Numeric(12, 4),
     )
-
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.utcnow,
@@ -286,7 +269,6 @@ class CompanyFinancial(Base):
 
 class News(Base):
     __tablename__ = "news"
-
     news_id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
@@ -300,19 +282,16 @@ class News(Base):
         DateTime,
         nullable=False,
     )
-
-    title: Mapped[Optional[str]] = mapped_column(Text)
-    summary: Mapped[Optional[str]] = mapped_column(Text)
-    content: Mapped[Optional[str]] = mapped_column(Text)
-
-    source: Mapped[Optional[str]] = mapped_column(
+    title: Mapped[str | None] = mapped_column(Text)
+    summary: Mapped[str | None] = mapped_column(Text)
+    content: Mapped[str | None] = mapped_column(Text)
+    source: Mapped[str | None] = mapped_column(
         String(100),
     )
-    author: Mapped[Optional[str]] = mapped_column(
+    author: Mapped[str | None] = mapped_column(
         String(100),
     )
-    url: Mapped[Optional[str]] = mapped_column(Text)
-
+    url: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.utcnow,
@@ -321,7 +300,6 @@ class News(Base):
 
 class NewsSentiment(Base):
     __tablename__ = "news_sentiments"
-
     sentiment_id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
@@ -331,17 +309,15 @@ class NewsSentiment(Base):
         Integer,
         ForeignKey("news.news_id", ondelete="CASCADE"),
     )
-
-    model_name: Mapped[Optional[str]] = mapped_column(
+    model_name: Mapped[str | None] = mapped_column(
         String(100),
     )
-    sentiment: Mapped[Optional[str]] = mapped_column(
+    sentiment: Mapped[str | None] = mapped_column(
         String(20),
     )  # POSITIVE, NEGATIVE, NEUTRAL
-    score: Mapped[Optional[float]] = mapped_column(
+    score: Mapped[float | None] = mapped_column(
         Numeric(6, 4),
     )
-
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.utcnow,
@@ -350,7 +326,6 @@ class NewsSentiment(Base):
 
 class MacroIndicator(Base):
     __tablename__ = "macro_indicators"
-
     macro_id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
@@ -360,22 +335,21 @@ class MacroIndicator(Base):
         Date,
         nullable=False,
     )
-    country: Mapped[Optional[str]] = mapped_column(
+    country: Mapped[str | None] = mapped_column(
         String(50),
     )
-    indicator_name: Mapped[Optional[str]] = mapped_column(
+    indicator_name: Mapped[str | None] = mapped_column(
         String(100),
     )
-    value: Mapped[Optional[float]] = mapped_column(
+    value: Mapped[float | None] = mapped_column(
         Numeric(18, 4),
     )
-    unit: Mapped[Optional[str]] = mapped_column(
+    unit: Mapped[str | None] = mapped_column(
         String(30),
     )
-    source: Mapped[Optional[str]] = mapped_column(
+    source: Mapped[str | None] = mapped_column(
         String(100),
     )
-
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.utcnow,
@@ -384,7 +358,6 @@ class MacroIndicator(Base):
 
 class ModelPrediction(Base):
     __tablename__ = "model_predictions"
-
     prediction_id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
@@ -394,7 +367,7 @@ class ModelPrediction(Base):
         String(20),
         ForeignKey("stocks.symbol", ondelete="CASCADE"),
     )
-    model_name: Mapped[Optional[str]] = mapped_column(
+    model_name: Mapped[str | None] = mapped_column(
         String(100),
     )
     predict_date: Mapped[date] = mapped_column(
@@ -405,20 +378,18 @@ class ModelPrediction(Base):
         Date,
         nullable=False,
     )
-
-    predicted_price: Mapped[Optional[float]] = mapped_column(
+    predicted_price: Mapped[float | None] = mapped_column(
         Numeric(12, 2),
     )
-    actual_price: Mapped[Optional[float]] = mapped_column(
+    actual_price: Mapped[float | None] = mapped_column(
         Numeric(12, 2),
     )
-    mae: Mapped[Optional[float]] = mapped_column(
+    mae: Mapped[float | None] = mapped_column(
         Numeric(12, 4),
     )
-    rmse: Mapped[Optional[float]] = mapped_column(
+    rmse: Mapped[float | None] = mapped_column(
         Numeric(12, 4),
     )
-
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.utcnow,
@@ -428,56 +399,44 @@ class ModelPrediction(Base):
 # ==========================================
 # 3. PRODUCTION QUANT & FEEDBACK EXTENSIONS
 #    (Master Plan v2)
+
 # ==========================================
 
 
 class ModelVersion(Base):
     __tablename__ = "model_versions"
-
     id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
         autoincrement=True,
     )
-
     model_name: Mapped[str] = mapped_column(
         String(100),
         nullable=False,
     )
-
     version: Mapped[str] = mapped_column(
         String(50),
         nullable=False,
         unique=True,
     )
-
     algorithm: Mapped[str] = mapped_column(
         String(100),
         nullable=False,
     )
-
-    metrics: Mapped[Optional[dict[str, Any]]] = mapped_column(
-        JSON
-    )  # Đã sửa dict -> dict[str, Any]
-
-    parameters: Mapped[Optional[dict[str, Any]]] = mapped_column(
-        JSON
-    )  # Đã sửa dict -> dict[str, Any]
-
+    metrics: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    parameters: Mapped[dict[str, Any] | None] = mapped_column(JSON)
     is_active: Mapped[bool] = mapped_column(
         Boolean,
         default=False,
     )
-
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.utcnow,
     )
-    
-    
+
+
 class Signal(Base):
     __tablename__ = "signals"
-
     id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
@@ -499,12 +458,11 @@ class Signal(Base):
         Numeric(6, 4),
         nullable=False,
     )
-    reasoning: Mapped[Optional[str]] = mapped_column(Text)
+    reasoning: Mapped[str | None] = mapped_column(Text)
 
 
 class TradePlan(Base):
     __tablename__ = "trade_plans"
-
     id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
@@ -518,7 +476,6 @@ class TradePlan(Base):
         DateTime,
         default=datetime.utcnow,
     )
-
     entry_price: Mapped[float] = mapped_column(
         Numeric(12, 2),
         nullable=False,
@@ -531,7 +488,6 @@ class TradePlan(Base):
         Numeric(12, 2),
         nullable=False,
     )
-
     position_size: Mapped[int] = mapped_column(
         Integer,
         nullable=False,
@@ -548,13 +504,12 @@ class TradePlan(Base):
 
 class PaperTrade(Base):
     __tablename__ = "paper_trades"
-
     id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
         autoincrement=True,
     )
-    trade_plan_id: Mapped[Optional[int]] = mapped_column(
+    trade_plan_id: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("trade_plans.id"),
     )
@@ -562,35 +517,30 @@ class PaperTrade(Base):
         String(20),
         nullable=False,
     )
-
     entry_time: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
     )
-    exit_time: Mapped[Optional[datetime]] = mapped_column(
+    exit_time: Mapped[datetime | None] = mapped_column(
         DateTime,
     )
-
     actual_entry_price: Mapped[float] = mapped_column(
         Numeric(12, 2),
         nullable=False,
     )
-    actual_exit_price: Mapped[Optional[float]] = mapped_column(
+    actual_exit_price: Mapped[float | None] = mapped_column(
         Numeric(12, 2),
     )
-
     quantity: Mapped[int] = mapped_column(
         Integer,
         nullable=False,
     )
-
-    pnl: Mapped[Optional[float]] = mapped_column(
+    pnl: Mapped[float | None] = mapped_column(
         Numeric(14, 2),
     )
-    pnl_percentage: Mapped[Optional[float]] = mapped_column(
+    pnl_percentage: Mapped[float | None] = mapped_column(
         Numeric(8, 4),
     )
-
     status: Mapped[str] = mapped_column(
         String(20),
         default="OPEN",
@@ -599,33 +549,27 @@ class PaperTrade(Base):
 
 class FeedbackDataset(Base):
     __tablename__ = "feedback_dataset"
-
     id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
         autoincrement=True,
     )
-
     paper_trade_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("paper_trades.id"),
     )
-
     feature_snapshot: Mapped[dict[str, Any]] = mapped_column(
         JSON,
         nullable=False,
-    )  # Đã sửa dict -> dict[str, Any]
-
+    )
     predicted_action: Mapped[str] = mapped_column(
         String(10),
         nullable=False,
     )
-
     actual_outcome: Mapped[int] = mapped_column(
         Integer,
         nullable=False,
     )
-
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=datetime.utcnow,

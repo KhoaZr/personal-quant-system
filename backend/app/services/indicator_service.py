@@ -5,6 +5,7 @@ import pandas as pd
 # SMA - Simple Moving Average
 # ============================================================
 
+
 def calculate_sma(df: pd.DataFrame) -> pd.DataFrame:
     """
     Tính Simple Moving Average.
@@ -16,17 +17,9 @@ def calculate_sma(df: pd.DataFrame) -> pd.DataFrame:
         Giá đóng cửa trung bình của 50 phiên gần nhất.
     """
 
-    df["sma20"] = (
-        df["close"]
-        .rolling(window=20, min_periods=20)
-        .mean()
-    )
+    df["sma20"] = df["close"].rolling(window=20, min_periods=20).mean()
 
-    df["sma50"] = (
-        df["close"]
-        .rolling(window=50, min_periods=50)
-        .mean()
-    )
+    df["sma50"] = df["close"].rolling(window=50, min_periods=50).mean()
 
     return df
 
@@ -35,6 +28,7 @@ def calculate_sma(df: pd.DataFrame) -> pd.DataFrame:
 # EMA - Exponential Moving Average
 # ============================================================
 
+
 def calculate_ema(df: pd.DataFrame) -> pd.DataFrame:
     """
     Tính Exponential Moving Average.
@@ -42,25 +36,9 @@ def calculate_ema(df: pd.DataFrame) -> pd.DataFrame:
     EMA đặt trọng số lớn hơn cho dữ liệu gần hiện tại.
     """
 
-    df["ema20"] = (
-        df["close"]
-        .ewm(
-            span=20,
-            adjust=False,
-            min_periods=20
-        )
-        .mean()
-    )
+    df["ema20"] = df["close"].ewm(span=20, adjust=False, min_periods=20).mean()
 
-    df["ema50"] = (
-        df["close"]
-        .ewm(
-            span=50,
-            adjust=False,
-            min_periods=50
-        )
-        .mean()
-    )
+    df["ema50"] = df["close"].ewm(span=50, adjust=False, min_periods=50).mean()
 
     return df
 
@@ -69,10 +47,8 @@ def calculate_ema(df: pd.DataFrame) -> pd.DataFrame:
 # RSI - Relative Strength Index
 # ============================================================
 
-def calculate_rsi(
-    df: pd.DataFrame,
-    period: int = 14
-) -> pd.DataFrame:
+
+def calculate_rsi(df: pd.DataFrame, period: int = 14) -> pd.DataFrame:
     """
     Tính Relative Strength Index (RSI).
 
@@ -99,41 +75,18 @@ def calculate_rsi(
     loss = -delta.clip(upper=0)
 
     # Wilder's smoothing
-    avg_gain = (
-        gain
-        .ewm(
-            alpha=1 / period,
-            adjust=False,
-            min_periods=period
-        )
-        .mean()
-    )
+    avg_gain = gain.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
 
-    avg_loss = (
-        loss
-        .ewm(
-            alpha=1 / period,
-            adjust=False,
-            min_periods=period
-        )
-        .mean()
-    )
+    avg_loss = loss.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
 
     # Tránh chia cho 0
-    rs = avg_gain.div(
-        avg_loss.replace(0, np.nan)
-    )
+    rs = avg_gain.div(avg_loss.replace(0, np.nan))
 
-    df["rsi14"] = 100 - (
-        100 / (1 + rs)
-    )
+    df["rsi14"] = 100 - (100 / (1 + rs))
 
     # Nếu average loss = 0 và average gain > 0
     # thì RSI = 100
-    df.loc[
-        (avg_loss == 0) & (avg_gain > 0),
-        "rsi14"
-    ] = 100.0
+    df.loc[(avg_loss == 0) & (avg_gain > 0), "rsi14"] = 100.0
 
     return df
 
@@ -141,6 +94,7 @@ def calculate_rsi(
 # ============================================================
 # MACD
 # ============================================================
+
 
 def calculate_macd(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -153,39 +107,15 @@ def calculate_macd(df: pd.DataFrame) -> pd.DataFrame:
     Histogram = MACD - Signal
     """
 
-    ema12 = (
-        df["close"]
-        .ewm(
-            span=12,
-            adjust=False
-        )
-        .mean()
-    )
+    ema12 = df["close"].ewm(span=12, adjust=False).mean()
 
-    ema26 = (
-        df["close"]
-        .ewm(
-            span=26,
-            adjust=False
-        )
-        .mean()
-    )
+    ema26 = df["close"].ewm(span=26, adjust=False).mean()
 
     df["macd"] = ema12 - ema26
 
-    df["macd_signal"] = (
-        df["macd"]
-        .ewm(
-            span=9,
-            adjust=False
-        )
-        .mean()
-    )
+    df["macd_signal"] = df["macd"].ewm(span=9, adjust=False).mean()
 
-    df["macd_hist"] = (
-        df["macd"]
-        - df["macd_signal"]
-    )
+    df["macd_hist"] = df["macd"] - df["macd_signal"]
 
     return df
 
@@ -194,10 +124,8 @@ def calculate_macd(df: pd.DataFrame) -> pd.DataFrame:
 # ATR - Average True Range
 # ============================================================
 
-def calculate_atr(
-    df: pd.DataFrame,
-    period: int = 14
-) -> pd.DataFrame:
+
+def calculate_atr(df: pd.DataFrame, period: int = 14) -> pd.DataFrame:
     """
     Tính Average True Range (ATR).
 
@@ -217,39 +145,15 @@ def calculate_atr(
 
     previous_close = df["close"].shift(1)
 
-    high_low = (
-        df["high"]
-        - df["low"]
-    )
+    high_low = df["high"] - df["low"]
 
-    high_previous_close = (
-        df["high"]
-        - previous_close
-    ).abs()
+    high_previous_close = (df["high"] - previous_close).abs()
 
-    low_previous_close = (
-        df["low"]
-        - previous_close
-    ).abs()
+    low_previous_close = (df["low"] - previous_close).abs()
 
-    true_range = pd.concat(
-        [
-            high_low,
-            high_previous_close,
-            low_previous_close
-        ],
-        axis=1
-    ).max(axis=1)
+    true_range = pd.concat([high_low, high_previous_close, low_previous_close], axis=1).max(axis=1)
 
-    df["atr14"] = (
-        true_range
-        .ewm(
-            alpha=1 / period,
-            adjust=False,
-            min_periods=period
-        )
-        .mean()
-    )
+    df["atr14"] = true_range.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
 
     return df
 
@@ -257,6 +161,7 @@ def calculate_atr(
 # ============================================================
 # OBV - On-Balance Volume
 # ============================================================
+
 
 def calculate_obv(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -276,17 +181,9 @@ def calculate_obv(df: pd.DataFrame) -> pd.DataFrame:
 
     direction = np.sign(price_change)
 
-    volume_change = (
-        direction
-        * df["volume"]
-    )
+    volume_change = direction * df["volume"]
 
-    df["obv"] = (
-        volume_change
-        .fillna(0)
-        .cumsum()
-        .astype("int64")
-    )
+    df["obv"] = volume_change.fillna(0).cumsum().astype("int64")
 
     return df
 
@@ -295,11 +192,8 @@ def calculate_obv(df: pd.DataFrame) -> pd.DataFrame:
 # Bollinger Bands
 # ============================================================
 
-def calculate_bollinger_bands(
-    df: pd.DataFrame,
-    period: int = 20,
-    num_std: int = 2
-) -> pd.DataFrame:
+
+def calculate_bollinger_bands(df: pd.DataFrame, period: int = 20, num_std: int = 2) -> pd.DataFrame:
     """
     Tính Bollinger Bands.
 
@@ -310,35 +204,15 @@ def calculate_bollinger_bands(
     Lower = Middle - 2 * Standard Deviation
     """
 
-    middle = (
-        df["close"]
-        .rolling(
-            window=period,
-            min_periods=period
-        )
-        .mean()
-    )
+    middle = df["close"].rolling(window=period, min_periods=period).mean()
 
-    standard_deviation = (
-        df["close"]
-        .rolling(
-            window=period,
-            min_periods=period
-        )
-        .std()
-    )
+    standard_deviation = df["close"].rolling(window=period, min_periods=period).std()
 
     df["bollinger_middle"] = middle
 
-    df["bollinger_upper"] = (
-        middle
-        + num_std * standard_deviation
-    )
+    df["bollinger_upper"] = middle + num_std * standard_deviation
 
-    df["bollinger_lower"] = (
-        middle
-        - num_std * standard_deviation
-    )
+    df["bollinger_lower"] = middle - num_std * standard_deviation
 
     return df
 
@@ -347,9 +221,8 @@ def calculate_bollinger_bands(
 # Calculate all technical indicators
 # ============================================================
 
-def calculate_all_indicators(
-    df: pd.DataFrame
-) -> pd.DataFrame:
+
+def calculate_all_indicators(df: pd.DataFrame) -> pd.DataFrame:
     """
     Tính toàn bộ technical indicators.
 
@@ -380,54 +253,27 @@ def calculate_all_indicators(
             bollinger_lower
     """
 
-    required_columns = {
-        "symbol",
-        "date",
-        "open",
-        "high",
-        "low",
-        "close",
-        "volume"
-    }
+    required_columns = {"symbol", "date", "open", "high", "low", "close", "volume"}
 
-    missing_columns = (
-        required_columns
-        - set(df.columns)
-    )
+    missing_columns = required_columns - set(df.columns)
 
     if missing_columns:
-        raise ValueError(
-            "Thiếu các cột bắt buộc: "
-            f"{sorted(missing_columns)}"
-        )
+        raise ValueError(f"Thiếu các cột bắt buộc: {sorted(missing_columns)}")
 
     # Không thay đổi DataFrame gốc
     df = df.copy()
 
     # Đảm bảo date là datetime
-    df["date"] = pd.to_datetime(
-        df["date"]
-    )
+    df["date"] = pd.to_datetime(df["date"])
 
     # Sắp xếp theo thời gian
-    df = df.sort_values(
-        "date"
-    ).reset_index(drop=True)
+    df = df.sort_values("date").reset_index(drop=True)
 
     # Kiểm tra dữ liệu số
-    numeric_columns = [
-        "open",
-        "high",
-        "low",
-        "close",
-        "volume"
-    ]
+    numeric_columns = ["open", "high", "low", "close", "volume"]
 
     for column in numeric_columns:
-        df[column] = pd.to_numeric(
-            df[column],
-            errors="coerce"
-        )
+        df[column] = pd.to_numeric(df[column], errors="coerce")
 
     # Tính từng nhóm indicator
     df = calculate_sma(df)
