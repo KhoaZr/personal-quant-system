@@ -1,5 +1,7 @@
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 
+from app.api.v1.indicators import router as indicators_router
 from app.api.v1.stocks import router as stocks_router
 
 app = FastAPI(
@@ -8,11 +10,14 @@ app = FastAPI(
     description="Backend REST API for Personal Quant System",
 )
 
+# Register Routers
+app.include_router(stocks_router, prefix="/api/v1")
+app.include_router(indicators_router, prefix="/api/v1")
 
-app.include_router(
-    stocks_router,
-    prefix="/api/v1",
-)
+
+@app.get("/", include_in_schema=False)
+def root_redirect() -> RedirectResponse:
+    return RedirectResponse(url="/docs")
 
 
 @app.get("/health", tags=["Health"])

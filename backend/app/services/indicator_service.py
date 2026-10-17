@@ -1,293 +1,107 @@
+
+from typing import Any
+
 import numpy as np
 import pandas as pd
+import ta
 
-# ============================================================
-# SMA - Simple Moving Average
-# ============================================================
-
-
-def calculate_sma(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Tính Simple Moving Average.
-
-    SMA20:
-        Giá đóng cửa trung bình của 20 phiên gần nhất.
-
-    SMA50:
-        Giá đóng cửa trung bình của 50 phiên gần nhất.
-    """
-
-    df["sma20"] = df["close"].rolling(window=20, min_periods=20).mean()
-
-    df["sma50"] = df["close"].rolling(window=50, min_periods=50).mean()
-
-    return df
+from app.models.stock import StockPrice
 
 
-# ============================================================
-# EMA - Exponential Moving Average
-# ============================================================
+class IndicatorService:
+    @staticmethod
+    def calculate_indicators(
+        prices: list[StockPrice],
+        symbol: str,
+    ) -> list[dict[str, Any]]:
+        """Tính toán chuỗi chỉ báo kỹ thuật từ danh sách giá OHLCV."""
+        if len(prices) < 20:
+            # Cần tối thiểu 20 phiên để tính toán chỉ báo cơ bản
+            return []
 
+        # 1. Chuyển đổi danh sách SQLAlchemy ORM sang Pandas DataFrame
+        data = [
+            {
+                "date": price.date,
+                "open": float(price.open),
+                "high": float(price.high),
+                "low": float(price.low),
+                "close": float(price.close),
+                "volume": float(price.volume),
+            }
+            for price in prices
+        ]
 
-def calculate_ema(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Tính Exponential Moving Average.
+        df = pd.DataFrame(data)
 
-    EMA đặt trọng số lớn hơn cho dữ liệu gần hiện tại.
-    """
+        # 2. Tính toán Moving Averages (SMA & EMA)
+        df["sma20"] = ta.trend.sma_indicator(df["close"], window=20)
+        df["sma50"] = ta.trend.sma_indicator(df["close"], window=50)
+        df["ema20"] = ta.trend.ema_indicator(df["close"], window=20)
+        df["ema50"] = ta.trend.ema_indicator(df["close"], window=50)
 
-    df["ema20"] = df["close"].ewm(span=20, adjust=False, min_periods=20).mean()
+        # 3. Tính toán Momentum (RSI)
+        df["rsi14"] = ta.momentum.rsi(df["close"], window=14)
 
-    df["ema50"] = df["close"].ewm(span=50, adjust=False, min_periods=50).mean()
+        # 4. Tính toán MACD
+        macd_obj = ta.trend.MACD(df["close"])
+        df["macd"] = macd_obj.macd()
+        df["macd_signal"] = macd_obj.macd_signal()
+        df["macd_hist"] = macd_obj.macd_diff()
 
-    return df
-
-
-# ============================================================
-# RSI - Relative Strength Index
-# ============================================================
-
-
-def calculate_rsi(df: pd.DataFrame, period: int = 14) -> pd.DataFrame:
-    """
-    Tính Relative Strength Index (RSI).
-
-    RSI đo động lượng tăng/giảm của giá.
-
-    Giá trị thường nằm trong khoảng 0 - 100.
-
-    Công thức:
-
-        RS = Average Gain / Average Loss
-
-        RSI = 100 - (100 / (1 + RS))
-
-    Sử dụng Wilder's smoothing thông qua EMA:
-        alpha = 1 / period
-    """
-
-    delta = df["close"].diff()
-
-    # Chỉ lấy phần tăng
-    gain = delta.clip(lower=0)
-
-    # Chỉ lấy phần giảm
-    loss = -delta.clip(upper=0)
-
-    # Wilder's smoothing
-    avg_gain = gain.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
-
-    avg_loss = loss.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
-
-    # Tránh chia cho 0
-    rs = avg_gain.div(avg_loss.replace(0, np.nan))
-
-    df["rsi14"] = 100 - (100 / (1 + rs))
-
-    # Nếu average loss = 0 và average gain > 0
-    # thì RSI = 100
-    df.loc[(avg_loss == 0) & (avg_gain > 0), "rsi14"] = 100.0
-
-    return df
-
-
-# ============================================================
-# MACD
-# ============================================================
-
-
-def calculate_macd(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Tính MACD.
-
-    MACD = EMA12 - EMA26
-
-    Signal = EMA9 của MACD
-
-    Histogram = MACD - Signal
-    """
-
-    ema12 = df["close"].ewm(span=12, adjust=False).mean()
-
-    ema26 = df["close"].ewm(span=26, adjust=False).mean()
-
-    df["macd"] = ema12 - ema26
-
-    df["macd_signal"] = df["macd"].ewm(span=9, adjust=False).mean()
-
-    df["macd_hist"] = df["macd"] - df["macd_signal"]
-
-    return df
-
-
-# ============================================================
-# ATR - Average True Range
-# ============================================================
-
-
-def calculate_atr(df: pd.DataFrame, period: int = 14) -> pd.DataFrame:
-    """
-    Tính Average True Range (ATR).
-
-    ATR đo mức độ biến động của giá,
-    không xác định hướng tăng hay giảm.
-
-    True Range:
-
-        TR = max(
-            High - Low,
-            abs(High - Previous Close),
-            abs(Low - Previous Close)
+        # 5. Tính toán Volatility (ATR & Bollinger Bands)
+        df["atr14"] = ta.volatility.average_true_range(
+            high=df["high"],
+            low=df["low"],
+            close=df["close"],
+            window=14,
         )
 
-    ATR sử dụng Wilder's smoothing.
-    """
+        bollinger = ta.volatility.BollingerBands(df["close"])
+        df["bollinger_upper"] = bollinger.bollinger_hband()
+        df["bollinger_middle"] = bollinger.bollinger_mavg()
+        df["bollinger_lower"] = bollinger.bollinger_lband()
 
-    previous_close = df["close"].shift(1)
+        # 6. Tính toán Volume Indicator (OBV)
+        df["obv"] = ta.volume.on_balance_volume(
+            df["close"],
+            df["volume"],
+        )
 
-    high_low = df["high"] - df["low"]
+        # 7. Định dạng dữ liệu và xử lý giá trị NaN an toàn
+        records: list[dict[str, Any]] = []
 
-    high_previous_close = (df["high"] - previous_close).abs()
+        def clean_num(val: Any) -> float | None:
+            if pd.isna(val) or np.isnan(val):
+                return None
+            return round(float(val), 4)
 
-    low_previous_close = (df["low"] - previous_close).abs()
+        for _, row in df.iterrows():
+            obv_val = row["obv"]
+            obv_clean = (
+                int(obv_val)
+                if not pd.isna(obv_val) and not np.isnan(obv_val)
+                else None
+            )
 
-    true_range = pd.concat([high_low, high_previous_close, low_previous_close], axis=1).max(axis=1)
+            records.append(
+                {
+                    "symbol": symbol,
+                    "date": row["date"],
+                    "sma20": clean_num(row["sma20"]),
+                    "sma50": clean_num(row["sma50"]),
+                    "ema20": clean_num(row["ema20"]),
+                    "ema50": clean_num(row["ema50"]),
+                    "rsi14": clean_num(row["rsi14"]),
+                    "macd": clean_num(row["macd"]),
+                    "macd_signal": clean_num(row["macd_signal"]),
+                    "macd_hist": clean_num(row["macd_hist"]),
+                    "atr14": clean_num(row["atr14"]),
+                    "obv": obv_clean,
+                    "bollinger_upper": clean_num(row["bollinger_upper"]),
+                    "bollinger_middle": clean_num(row["bollinger_middle"]),
+                    "bollinger_lower": clean_num(row["bollinger_lower"]),
+                }
+            )
 
-    df["atr14"] = true_range.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
-
-    return df
-
-
-# ============================================================
-# OBV - On-Balance Volume
-# ============================================================
-
-
-def calculate_obv(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Tính On-Balance Volume (OBV).
-
-    Nếu Close hôm nay > Close hôm qua:
-        OBV += Volume
-
-    Nếu Close hôm nay < Close hôm qua:
-        OBV -= Volume
-
-    Nếu Close hôm nay = Close hôm qua:
-        OBV không thay đổi.
-    """
-
-    price_change = df["close"].diff()
-
-    direction = np.sign(price_change)
-
-    volume_change = direction * df["volume"]
-
-    df["obv"] = volume_change.fillna(0).cumsum().astype("int64")
-
-    return df
-
-
-# ============================================================
-# Bollinger Bands
-# ============================================================
-
-
-def calculate_bollinger_bands(df: pd.DataFrame, period: int = 20, num_std: int = 2) -> pd.DataFrame:
-    """
-    Tính Bollinger Bands.
-
-    Middle = SMA20
-
-    Upper = Middle + 2 * Standard Deviation
-
-    Lower = Middle - 2 * Standard Deviation
-    """
-
-    middle = df["close"].rolling(window=period, min_periods=period).mean()
-
-    standard_deviation = df["close"].rolling(window=period, min_periods=period).std()
-
-    df["bollinger_middle"] = middle
-
-    df["bollinger_upper"] = middle + num_std * standard_deviation
-
-    df["bollinger_lower"] = middle - num_std * standard_deviation
-
-    return df
-
-
-# ============================================================
-# Calculate all technical indicators
-# ============================================================
-
-
-def calculate_all_indicators(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Tính toàn bộ technical indicators.
-
-    Input:
-        DataFrame chứa:
-            symbol
-            date
-            open
-            high
-            low
-            close
-            volume
-
-    Output:
-        DataFrame chứa thêm:
-            sma20
-            sma50
-            ema20
-            ema50
-            rsi14
-            macd
-            macd_signal
-            macd_hist
-            atr14
-            obv
-            bollinger_upper
-            bollinger_middle
-            bollinger_lower
-    """
-
-    required_columns = {"symbol", "date", "open", "high", "low", "close", "volume"}
-
-    missing_columns = required_columns - set(df.columns)
-
-    if missing_columns:
-        raise ValueError(f"Thiếu các cột bắt buộc: {sorted(missing_columns)}")
-
-    # Không thay đổi DataFrame gốc
-    df = df.copy()
-
-    # Đảm bảo date là datetime
-    df["date"] = pd.to_datetime(df["date"])
-
-    # Sắp xếp theo thời gian
-    df = df.sort_values("date").reset_index(drop=True)
-
-    # Kiểm tra dữ liệu số
-    numeric_columns = ["open", "high", "low", "close", "volume"]
-
-    for column in numeric_columns:
-        df[column] = pd.to_numeric(df[column], errors="coerce")
-
-    # Tính từng nhóm indicator
-    df = calculate_sma(df)
-
-    df = calculate_ema(df)
-
-    df = calculate_rsi(df)
-
-    df = calculate_macd(df)
-
-    df = calculate_atr(df)
-
-    df = calculate_obv(df)
-
-    df = calculate_bollinger_bands(df)
-
-    return df
+        return records
