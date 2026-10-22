@@ -9,3 +9,6 @@ __pycache__/
 .DS_Store
 Thumbs.db
 .env
+ml/models/*.joblib
+ml/models/*.pkl
+ml/models/*.pickle
