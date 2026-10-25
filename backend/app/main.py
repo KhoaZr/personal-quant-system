@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.indicators import router as indicators_router
 from app.api.v1.predictions import router as predictions_router
@@ -12,6 +13,19 @@ app = FastAPI(
     version="0.1.0",
     description="Backend REST API for Personal Quant System",
 )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000", 
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
+
 
 # Register Routers
 app.include_router(stocks_router, prefix="/api/v1")
