@@ -1,4 +1,3 @@
-
 import math
 from typing import Any
 
@@ -19,36 +18,24 @@ class RiskSignalService:
         if probability_up >= 0.60:
             if rsi is not None and rsi > 70:
                 action = "HOLD"
-                reasoning.append(
-                    "Xác suất tăng cao nhưng RSI ở vùng quá mua (>70)."
-                )
+                reasoning.append("Xác suất tăng cao nhưng RSI ở vùng quá mua (>70).")
             elif sma20 is not None and close_price < sma20:
                 action = "HOLD"
-                reasoning.append(
-                    "Xác suất tăng nhưng giá nằm dưới SMA20 "
-                    "(Xu hướng ngắn hạn yếu)."
-                )
+                reasoning.append("Xác suất tăng nhưng giá nằm dưới SMA20 (Xu hướng ngắn hạn yếu).")
             else:
                 action = "BUY"
-                reasoning.append(
-                    f"Mô hình ML dự đoán xác suất tăng "
-                    f"{probability_up * 100:.1f}%."
-                )
+                reasoning.append(f"Mô hình ML dự đoán xác suất tăng {probability_up * 100:.1f}%.")
 
         # Quy tắc sinh tín hiệu SELL
         elif probability_up <= 0.40:
             action = "SELL"
             reasoning.append(
-                "Mô hình ML dự đoán xác suất giảm/đi ngang "
-                f"(Tăng chỉ {probability_up * 100:.1f}%)."
+                f"Mô hình ML dự đoán xác suất giảm/đi ngang (Tăng chỉ {probability_up * 100:.1f}%)."
             )
 
         # Quy tắc sinh tín hiệu HOLD
         else:
-            reasoning.append(
-                f"Tín hiệu trung tính "
-                f"(Xác suất tăng {probability_up * 100:.1f}%)."
-            )
+            reasoning.append(f"Tín hiệu trung tính (Xác suất tăng {probability_up * 100:.1f}%).")
 
         return {
             "action": action,
@@ -74,11 +61,7 @@ class RiskSignalService:
             return None
 
         # Sử dụng 2 * ATR(14) để đặt Stop Loss theo biến động thực tế
-        atr_val = (
-            atr14
-            if atr14 is not None and atr14 > 0
-            else entry_price * 0.025
-        )
+        atr_val = atr14 if atr14 is not None and atr14 > 0 else entry_price * 0.025
 
         stop_loss_distance = 2.0 * atr_val
         stop_loss = max(
@@ -98,9 +81,7 @@ class RiskSignalService:
         )
 
         # Position Size = Hạn mức rủi ro / Rủi ro trên mỗi cổ phiếu
-        position_size = math.floor(
-            account_risk_limit / risk_per_share
-        )
+        position_size = math.floor(account_risk_limit / risk_per_share)
 
         return {
             "symbol": symbol,

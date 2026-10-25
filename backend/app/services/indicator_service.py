@@ -1,4 +1,3 @@
-
 from typing import Any
 
 import numpy as np
@@ -78,11 +77,7 @@ class IndicatorService:
 
         for _, row in df.iterrows():
             obv_val = row["obv"]
-            obv_clean = (
-                int(obv_val)
-                if not pd.isna(obv_val) and not np.isnan(obv_val)
-                else None
-            )
+            obv_clean = int(obv_val) if not pd.isna(obv_val) and not np.isnan(obv_val) else None
 
             records.append(
                 {

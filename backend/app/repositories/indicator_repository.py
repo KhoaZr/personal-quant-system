@@ -1,4 +1,3 @@
-
 from typing import Any
 
 from sqlalchemy import select
@@ -14,11 +13,7 @@ class IndicatorRepository:
 
     def get_prices_by_symbol(self, symbol: str) -> list[StockPrice]:
         """Lấy danh sách giá lịch sử của một mã cổ phiếu được sắp xếp theo thời gian tăng dần."""
-        stmt = (
-            select(StockPrice)
-            .where(StockPrice.symbol == symbol)
-            .order_by(StockPrice.date.asc())
-        )
+        stmt = select(StockPrice).where(StockPrice.symbol == symbol).order_by(StockPrice.date.asc())
 
         return list(self.db.scalars(stmt).all())
 

@@ -6,7 +6,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[4]
 
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
-    
+
 import logging
 import os
 
@@ -51,8 +51,7 @@ def predict_stock_signals(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=(
-                "Không tìm thấy mô hình ML đang active. "
-                "Vui lòng chạy kịch bản huấn luyện trước."
+                "Không tìm thấy mô hình ML đang active. Vui lòng chạy kịch bản huấn luyện trước."
             ),
         )
 
@@ -78,10 +77,7 @@ def predict_stock_signals(
     if not os.path.exists(model_path) or not os.path.exists(scaler_path):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=(
-                f"File artifact của mô hình phiên bản "
-                f"{version_str} không tồn tại."
-            ),
+            detail=(f"File artifact của mô hình phiên bản {version_str} không tồn tại."),
         )
 
     model = joblib.load(model_path)
@@ -156,9 +152,7 @@ def predict_stock_signals(
         prob_up = float(model.predict_proba(X_scaled)[0, 1])
         pred_signal = 1 if prob_up >= 0.5 else 0
 
-        confidence = (
-            prob_up if pred_signal == 1 else (1.0 - prob_up)
-        )
+        confidence = prob_up if pred_signal == 1 else (1.0 - prob_up)
 
         prediction_items.append(
             PredictionItem(

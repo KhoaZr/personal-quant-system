@@ -1,4 +1,3 @@
-
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -26,7 +25,7 @@ router = APIRouter(
 )
 def open_paper_trade(
     payload: OpenPaperTradeRequest,
-    db: Session = Depends(get_db), # noqa: B008
+    db: Session = Depends(get_db),  # noqa: B008
 ) -> PaperTradeResponse:
     """Khởi tạo lệnh giao dịch mô phỏng ở trạng thái OPEN."""
     repo = PaperTradeRepository(db)
@@ -51,7 +50,7 @@ def open_paper_trade(
 )
 def close_paper_trade(
     payload: ClosePaperTradeRequest,
-    db: Session = Depends(get_db), # noqa: B008
+    db: Session = Depends(get_db),  # noqa: B008
 ) -> PaperTradeResponse:
     """Đóng lệnh mô phỏng và tạo Feedback Dataset."""
     repo = PaperTradeRepository(db)
@@ -68,10 +67,7 @@ def close_paper_trade(
     if trade is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=(
-                f"Không tìm thấy lệnh OPEN với "
-                f"trade_id = {payload.trade_id}"
-            ),
+            detail=(f"Không tìm thấy lệnh OPEN với trade_id = {payload.trade_id}"),
         )
 
     FeedbackService.record_feedback_from_trade(db, trade)
@@ -84,13 +80,10 @@ def close_paper_trade(
     response_model=list[PaperTradeResponse],
 )
 def list_open_trades(
-    db: Session = Depends(get_db), # noqa: B008
+    db: Session = Depends(get_db),  # noqa: B008
 ) -> list[PaperTradeResponse]:
     """Lấy danh sách các lệnh giao dịch mô phỏng đang mở."""
     repo = PaperTradeRepository(db)
     trades = repo.get_open_trades()
 
-    return [
-        PaperTradeResponse.model_validate(trade)
-        for trade in trades
-    ]
+    return [PaperTradeResponse.model_validate(trade) for trade in trades]

@@ -1,4 +1,3 @@
-
 from datetime import datetime
 from typing import Any
 
@@ -75,15 +74,11 @@ class PaperTradeRepository:
             )
 
         # Tính lợi nhuận sau phí.
-        gross_pnl = (
-            exit_price - entry_price
-        ) * quantity
+        gross_pnl = (exit_price - entry_price) * quantity
         net_pnl = gross_pnl - fees
 
         # Tỷ suất lợi nhuận ròng trên vốn vào lệnh.
-        return_pct = (
-            net_pnl / (entry_price * quantity)
-        ) * 100
+        return_pct = (net_pnl / (entry_price * quantity)) * 100
 
         trade.actual_exit_price = exit_price
         trade.exit_time = exit_time

@@ -1,4 +1,3 @@
-
 import logging
 from typing import Any
 
@@ -48,9 +47,7 @@ class FeedbackService:
 
         # Tránh tạo nhiều feedback cho cùng một giao dịch.
         existing_feedback = db.scalar(
-            select(FeedbackDataset).where(
-                FeedbackDataset.paper_trade_id == paper_trade.id
-            )
+            select(FeedbackDataset).where(FeedbackDataset.paper_trade_id == paper_trade.id)
         )
 
         if existing_feedback is not None:
@@ -83,32 +80,27 @@ class FeedbackService:
             features_snapshot: dict[str, Any] = {
                 "close": (
                     float(latest_price.close)
-                    if latest_price is not None
-                    and latest_price.close is not None
+                    if latest_price is not None and latest_price.close is not None
                     else 0.0
                 ),
                 "rsi14": (
                     float(latest_indicator.rsi14)
-                    if latest_indicator is not None
-                    and latest_indicator.rsi14 is not None
+                    if latest_indicator is not None and latest_indicator.rsi14 is not None
                     else 0.0
                 ),
                 "macd": (
                     float(latest_indicator.macd)
-                    if latest_indicator is not None
-                    and latest_indicator.macd is not None
+                    if latest_indicator is not None and latest_indicator.macd is not None
                     else 0.0
                 ),
                 "sma20": (
                     float(latest_indicator.sma20)
-                    if latest_indicator is not None
-                    and latest_indicator.sma20 is not None
+                    if latest_indicator is not None and latest_indicator.sma20 is not None
                     else 0.0
                 ),
                 "atr14": (
                     float(latest_indicator.atr14)
-                    if latest_indicator is not None
-                    and latest_indicator.atr14 is not None
+                    if latest_indicator is not None and latest_indicator.atr14 is not None
                     else 0.0
                 ),
             }

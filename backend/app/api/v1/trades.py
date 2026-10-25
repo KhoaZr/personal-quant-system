@@ -1,4 +1,3 @@
-
 import logging
 from datetime import UTC, datetime
 
@@ -32,7 +31,7 @@ router = APIRouter(
 )
 def generate_signals_and_plans(
     payload: GenerateSignalRequest,
-    db: Session = Depends(get_db), # noqa: B008
+    db: Session = Depends(get_db),  # noqa: B008
 ) -> GenerateSignalResponse:
     """Tạo tín hiệu giao dịch và kế hoạch lệnh (Trade Plan) tự động."""
     trade_repo = TradeRepository(db)
@@ -51,9 +50,7 @@ def generate_signals_and_plans(
         sym = pred.symbol
 
         latest_price = db.scalars(
-            select(StockPrice)
-            .where(StockPrice.symbol == sym)
-            .order_by(StockPrice.date.desc())
+            select(StockPrice).where(StockPrice.symbol == sym).order_by(StockPrice.date.desc())
         ).first()
 
         latest_indicator = db.scalars(
@@ -69,22 +66,19 @@ def generate_signals_and_plans(
 
         rsi_val = (
             float(latest_indicator.rsi14)
-            if latest_indicator is not None
-            and latest_indicator.rsi14 is not None
+            if latest_indicator is not None and latest_indicator.rsi14 is not None
             else None
         )
 
         sma20_val = (
             float(latest_indicator.sma20)
-            if latest_indicator is not None
-            and latest_indicator.sma20 is not None
+            if latest_indicator is not None and latest_indicator.sma20 is not None
             else None
         )
 
         atr14_val = (
             float(latest_indicator.atr14)
-            if latest_indicator is not None
-            and latest_indicator.atr14 is not None
+            if latest_indicator is not None and latest_indicator.atr14 is not None
             else None
         )
 

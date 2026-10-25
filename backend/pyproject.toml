@@ -21,6 +21,7 @@ dependencies = [
     "requests>=2.31.0",
     "ta>=0.11.0",
     "psycopg[binary]>=3.3.6",
+    "apscheduler>=3.11.3",
 ]
 
 [build-system]
