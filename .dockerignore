@@ -1,0 +1,27 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Git
+.git/
+.gitignore
+
+# OS files
+.DS_Store
+
+# Frontend build artifacts
+frontend/node_modules/
+frontend/dist/
+
+# Test & coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
