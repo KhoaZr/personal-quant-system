@@ -5,8 +5,8 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
-
-    container_name: personal_quant_backend
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
     restart: always
 
     ports:

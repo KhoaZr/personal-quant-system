@@ -1,8 +1,10 @@
+
 # backend/app/main.py
 
 import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from zoneinfo import ZoneInfo
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -26,48 +28,74 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================
-# 2. KHỞI TẠO SCHEDULER
+# 2. CẤU HÌNH TIMEZONE VÀ SCHEDULER
 # ============================================================
 
-scheduler = BackgroundScheduler()
+# Múi giờ Việt Nam (UTC+7)
+VN_TZ = ZoneInfo("Asia/Ho_Chi_Minh")
 
+# Khởi tạo Scheduler theo giờ Việt Nam
+scheduler = BackgroundScheduler(
+    timezone=VN_TZ,
+)
+
+
+# ============================================================
+# 3. QUẢN LÝ VÒNG ĐỜI FASTAPI
+# ============================================================
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """
     Quản lý vòng đời ứng dụng FastAPI.
-    Tự động chạy Daily Quant Pipeline lúc 23:00 từ thứ Hai đến thứ Sáu.
+
+    Tự động chạy Daily Quant Pipeline:
+    - Thời gian: 23:00
+    - Múi giờ: Asia/Ho_Chi_Minh
+    - Ngày: Thứ Hai đến Thứ Sáu.
     """
 
-    # Lập lịch chạy tự động lúc 23:00 từ thứ Hai đến thứ Sáu
+    # Tạo lịch chạy tự động
     trigger = CronTrigger(
         hour=23,
         minute=0,
         day_of_week="mon-fri",
+        timezone=VN_TZ,
     )
 
+    # Đăng ký công việc
     scheduler.add_job(
         run_daily_quant_pipeline,
         trigger=trigger,
         id="daily_quant_pipeline_job",
-        name="Chạy Daily Quant Pipeline lúc 23:00",
+        name="Daily Quant Pipeline - 23:00 Vietnam Time",
         replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=3600,
     )
 
+    # Khởi động Scheduler
     scheduler.start()
 
-    logger.info("APScheduler đã khởi động: Daily Pipeline được lên lịch chạy lúc 23:00.")
+    logger.info(
+        "APScheduler started: "
+        "Daily Pipeline scheduled at 23:00 "
+        "(Asia/Ho_Chi_Minh), Monday-Friday."
+    )
 
-    yield
+    try:
+        yield
 
-    # Dừng scheduler khi ứng dụng tắt
-    scheduler.shutdown()
+    finally:
+        # Tắt Scheduler khi FastAPI shutdown
+        scheduler.shutdown(wait=True)
 
-    logger.info("APScheduler đã dừng.")
+        logger.info("APScheduler stopped.")
 
 
 # ============================================================
-# 3. KHỞI TẠO FASTAPI APPLICATION
+# 4. KHỞI TẠO FASTAPI APPLICATION
 # ============================================================
 
 app = FastAPI(
@@ -79,7 +107,7 @@ app = FastAPI(
 
 
 # ============================================================
-# 4. CẤU HÌNH CORS MIDDLEWARE
+# 5. CẤU HÌNH CORS MIDDLEWARE
 # ============================================================
 
 app.add_middleware(
@@ -96,7 +124,7 @@ app.add_middleware(
 
 
 # ============================================================
-# 5. ĐĂNG KÝ CÁC API ROUTERS
+# 6. ĐĂNG KÝ API ROUTERS
 # ============================================================
 
 app.include_router(stocks_router, prefix="/api/v1")
@@ -107,9 +135,8 @@ app.include_router(paper_trades_router, prefix="/api/v1")
 
 
 # ============================================================
-# 6. API KÍCH HOẠT DAILY PIPELINE THỦ CÔNG
+# 7. API KÍCH HOẠT DAILY PIPELINE THỦ CÔNG
 # ============================================================
-
 
 @app.post(
     "/api/v1/pipeline/trigger-daily",
@@ -119,37 +146,35 @@ def trigger_daily_pipeline_manual(
     background_tasks: BackgroundTasks,
 ) -> dict[str, str]:
     """
-    Kích hoạt thủ công Daily Pipeline chạy ngầm,
-    không chặn request hiện tại.
+    Kích hoạt Daily Pipeline thủ công ở background.
     """
 
     background_tasks.add_task(run_daily_quant_pipeline)
 
     return {
         "status": "triggered",
-        "message": ("Daily Quant Pipeline đã được kích hoạt chạy ngầm thành công."),
+        "message": "Daily Quant Pipeline đã được kích hoạt.",
     }
 
 
 # ============================================================
-# 7. ROOT ENDPOINT
+# 8. ROOT ENDPOINT
 # ============================================================
-
 
 @app.get("/", include_in_schema=False)
 def root_redirect() -> RedirectResponse:
-    """Chuyển hướng trang chủ sang tài liệu API."""
+    """Chuyển hướng sang API Documentation."""
+
     return RedirectResponse(url="/docs")
 
 
 # ============================================================
-# 8. HEALTH CHECK ENDPOINT
+# 9. HEALTH CHECK ENDPOINT
 # ============================================================
-
 
 @app.get("/health", tags=["Health"])
 def health_check() -> dict[str, str]:
-    """Kiểm tra trạng thái hoạt động của backend."""
+    """Kiểm tra trạng thái Backend."""
 
     return {
         "status": "healthy",

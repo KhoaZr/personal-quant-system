@@ -9,12 +9,16 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app/backend:/app
+ENV TZ=Asia/Ho_Chi_Minh
 
 # Cài đặt các công cụ hệ thống cần thiết
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         curl \
         gcc \
+        tzdata \
+    && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
+    && echo $TZ > /etc/timezone \
     && rm -rf /var/lib/apt/lists/*
 
 # Cài đặt uv package manager
