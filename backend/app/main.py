@@ -17,6 +17,7 @@ from app.api.v1.paper_trades import router as paper_trades_router
 from app.api.v1.predictions import router as predictions_router
 from app.api.v1.stocks import router as stocks_router
 from app.api.v1.trades import router as trades_router
+from app.api.v1.backtest import router as backtest_router
 from app.services.daily_pipeline import run_daily_quant_pipeline
 
 # ============================================================
@@ -132,6 +133,7 @@ app.include_router(indicators_router, prefix="/api/v1")
 app.include_router(predictions_router, prefix="/api/v1")
 app.include_router(trades_router, prefix="/api/v1")
 app.include_router(paper_trades_router, prefix="/api/v1")
+app.include_router(backtest_router, prefix="/api/v1")
 
 
 # ============================================================
