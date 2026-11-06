@@ -1,8 +1,10 @@
-
 import axios from "axios";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api/v1";
+
 const apiClient = axios.create({
-  baseURL: "http://127.0.0.1:8000/api/v1",
+  baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -38,9 +40,11 @@ export const quantAPI = {
       account_risk_limit,
     }),
 
+  // Chạy kiểm thử chiến lược định lượng (Backtest Engine)
+  runBacktest: (params) => apiClient.post("/backtest/run", params),
+
   // Lấy danh sách giao dịch giả lập đang mở
-  getOpenPaperTrades: () =>
-    apiClient.get("/paper-trades/open-trades"),
+  getOpenPaperTrades: () => apiClient.get("/paper-trades/open-trades"),
 
   // Mở giao dịch giả lập
   openPaperTrade: (tradeData) =>
